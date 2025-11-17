@@ -1,0 +1,310 @@
+---
+description: Raycast API utilities and advanced features
+globs: **/src/**/*.ts
+alwaysApply: false
+---
+# Raycast API Utilities
+
+**Complete guide to Raycast API utilities and advanced features**
+
+## Cache
+
+### Basic Cache Usage
+
+```tsx
+import { Cache } from "@raycast/api";
+
+// Set cache with TTL
+await Cache.set("key", "value", { ttl: 3600 }); // 1 hour
+
+// Get cache
+const value = await Cache.get("key");
+
+// Check if exists
+const exists = await Cache.has("key");
+
+// Remove cache
+await Cache.remove("key");
+
+// Clear all cache
+await Cache.clear();
+```
+
+### Cache with Objects
+
+```tsx
+import { Cache } from "@raycast/api";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+// Store object
+const user: User = { id: "1", name: "John", email: "john@example.com" };
+await Cache.set("user", JSON.stringify(user), { ttl: 3600 });
+
+// Retrieve object
+const cached = await Cache.get("user");
+if (cached) {
+  const user: User = JSON.parse(cached);
+}
+```
+
+## Storage
+
+### Persistent Storage
+
+```tsx
+import { LocalStorage } from "@raycast/api";
+
+// Set value
+await LocalStorage.setItem("key", "value");
+
+// Get value
+const value = await LocalStorage.getItem("key");
+
+// Remove value
+await LocalStorage.removeItem("key");
+
+// Clear all
+await LocalStorage.clear();
+
+// Get all items
+const items = await LocalStorage.allItems();
+```
+
+### Storage with Objects
+
+```tsx
+import { LocalStorage } from "@raycast/api";
+
+interface Settings {
+  theme: string;
+  language: string;
+}
+
+// Store object
+const settings: Settings = { theme: "dark", language: "en" };
+await LocalStorage.setItem("settings", JSON.stringify(settings));
+
+// Retrieve object
+const stored = await LocalStorage.getItem("settings");
+if (stored) {
+  const settings: Settings = JSON.parse(stored);
+}
+```
+
+## OAuth
+
+### OAuth PKCE Flow
+
+```tsx
+import { OAuthService } from "@raycast/utils";
+import { showToast, Toast } from "@raycast/api";
+
+const oauthService = OAuthService.google({
+  clientId: "your-client-id",
+  scope: "https://www.googleapis.com/auth/userinfo.email",
+});
+
+export default async function Command() {
+  try {
+    const tokenSet = await oauthService.authorize();
+    const profile = await fetchProfile(tokenSet.accessToken);
+    return profile;
+  } catch (error) {
+    await showToast({
+      style: Toast.Style.Failure,
+      title: "Authentication failed",
+    });
+    throw error;
+  }
+}
+```
+
+### Custom OAuth
+
+```tsx
+import { OAuthService } from "@raycast/utils";
+
+const oauthService = OAuthService.authorize({
+  authorizeUrl: "https://api.example.com/oauth/authorize",
+  tokenUrl: "https://api.example.com/oauth/token",
+  clientId: "your-client-id",
+  clientSecret: "your-client-secret",
+  scope: "read write",
+});
+
+export default async function Command() {
+  const tokenSet = await oauthService.authorize();
+  // Use tokenSet.accessToken
+}
+```
+
+## Clipboard
+
+### Copy to Clipboard
+
+```tsx
+import { Clipboard, showToast, Toast } from "@raycast/api";
+
+export default async function Command() {
+  await Clipboard.copy("Text to copy");
+  
+  await showToast({
+    style: Toast.Style.Success,
+    title: "Copied to clipboard",
+  });
+}
+```
+
+### Read from Clipboard
+
+```tsx
+import { Clipboard } from "@raycast/api";
+
+export default async function Command() {
+  const text = await Clipboard.readText();
+  console.log(text);
+}
+```
+
+### Copy File
+
+```tsx
+import { Clipboard } from "@raycast/api";
+
+export default async function Command() {
+  await Clipboard.copy({ file: "/path/to/file.png" });
+}
+```
+
+## Environment
+
+### Environment Information
+
+```tsx
+import { environment } from "@raycast/api";
+
+export default function Command() {
+  console.log("Is Development:", environment.isDevelopment);
+  console.log("Extension Name:", environment.extensionName);
+  console.log("Command Name:", environment.commandName);
+  console.log("Command Mode:", environment.commandMode);
+  console.log("Raycast Version:", environment.raycastVersion);
+  console.log("Theme:", environment.theme); // "light" | "dark"
+}
+```
+
+## Keyboard
+
+### Keyboard Shortcuts
+
+```tsx
+import { Action, Keyboard } from "@raycast/api";
+
+<Action
+  title="Copy"
+  shortcut={Keyboard.Shortcut.Common.Copy}
+  onAction={() => console.log("Copy")}
+/>
+
+<Action
+  title="Custom"
+  shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
+  onAction={() => console.log("Custom")}
+/>
+```
+
+## PopToRoot
+
+### Pop to Root
+
+```tsx
+import { popToRoot, showToast, Toast } from "@raycast/api";
+
+export default async function Command() {
+  await performAction();
+  
+  await showToast({
+    style: Toast.Style.Success,
+    title: "Completed",
+  });
+  
+  await popToRoot({ clearSearchBar: true });
+}
+```
+
+## Update Command Metadata
+
+### Update Command Title
+
+```tsx
+import { updateCommandMetadata } from "@raycast/api";
+
+export default async function Command() {
+  await updateCommandMetadata({ subtitle: "Last updated: " + new Date().toLocaleTimeString() });
+}
+```
+
+## Open
+
+### Open URLs and Files
+
+```tsx
+import { open, showToast, Toast } from "@raycast/api";
+
+// Open URL
+await open("https://raycast.com");
+
+// Open file
+await open("/path/to/file.pdf");
+
+// Open with application
+await open("/path/to/file.pdf", "Preview");
+
+// Open in background
+await open("https://raycast.com", { background: true });
+```
+
+## Alert
+
+### Show Alert
+
+```tsx
+import { Alert, confirmAlert, Icon, Color } from "@raycast/api";
+
+export default async function Command() {
+  const confirmed = await confirmAlert({
+    title: "Confirm Action",
+    message: "Are you sure you want to proceed?",
+    icon: Icon.Trash,
+    primaryAction: {
+      title: "Confirm",
+      style: Alert.ActionStyle.Destructive,
+    },
+    dismissAction: {
+      title: "Cancel",
+    },
+  });
+
+  if (confirmed) {
+    // Proceed with action
+  }
+}
+```
+
+## Best Practices
+
+- Use Cache for temporary data with TTL
+- Use Storage for persistent user data
+- Implement OAuth for secure authentication
+- Provide feedback with toasts
+- Use appropriate keyboard shortcuts
+- Handle errors gracefully
+- Clear cache when appropriate
+- Use type-safe storage with interfaces
+- Pop to root after completing actions
+- Update command metadata for dynamic info

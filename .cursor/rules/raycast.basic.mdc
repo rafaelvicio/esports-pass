@@ -1,0 +1,191 @@
+---
+description: Basic concepts and structure for Raycast extensions
+globs: **/src/**/*.tsx
+alwaysApply: false
+---
+# Raycast Extension Basics
+
+**Fundamental concepts and structure for building Raycast extensions**
+
+## Extension Structure
+
+```
+extension/
+├── package.json          # Extension manifest and dependencies
+├── tsconfig.json         # TypeScript configuration
+├── src/
+│   ├── index.tsx         # Main entry point
+│   └── commands/        # Command implementations
+└── assets/              # Icons and images
+```
+
+## Package.json (Manifest)
+
+```json
+{
+  "name": "my-extension",
+  "title": "My Extension",
+  "description": "Description of my extension",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "license": "MIT",
+  "scripts": {
+    "dev": "ray develop",
+    "build": "ray build -e dist",
+    "lint": "ray lint"
+  },
+  "dependencies": {
+    "@raycast/api": "^1.0.0"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^1.0.0",
+    "@types/node": "^18.0.0",
+    "@types/react": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "raycast": {
+    "schemaVersion": 1,
+    "title": "My Extension",
+    "description": "Description of my extension",
+    "icon": "icon.png",
+    "access": "public",
+    "commands": [
+      {
+        "name": "index",
+        "title": "My Command",
+        "description": "Command description",
+        "mode": "view"
+      }
+    ],
+    "preferences": [
+      {
+        "name": "apiKey",
+        "type": "textfield",
+        "required": true,
+        "title": "API Key",
+        "description": "Your API key"
+      }
+    ]
+  }
+}
+```
+
+## Basic Command Structure
+
+```tsx
+import { List, ActionPanel, Action, Icon } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <List>
+      <List.Item
+        title="Hello World"
+        subtitle="Raycast Extension"
+        actions={
+          <ActionPanel>
+            <Action
+              title="Open"
+              onAction={() => console.log("Action triggered")}
+            />
+          </ActionPanel>
+        }
+      />
+    </List>
+  );
+}
+```
+
+## Development Workflow
+
+### Start Development Server
+
+```bash
+npx ray develop
+```
+
+- Hot-reloading enabled
+- Error messages in Raycast window
+- Console logs visible in terminal
+
+### Build Extension
+
+```bash
+npx ray build -e dist
+```
+
+### Lint Code
+
+```bash
+npx ray lint
+```
+
+## Command Modes
+
+### View Mode (Default)
+
+```tsx
+import { List } from "@raycast/api";
+
+export default function Command() {
+  return <List />;
+}
+```
+
+### No-View Mode
+
+```json
+{
+  "mode": "no-view"
+}
+```
+
+```tsx
+import { showToast, Toast } from "@raycast/api";
+
+export default async function Command() {
+  await showToast({
+    style: Toast.Style.Success,
+    title: "Task completed",
+  });
+}
+```
+
+## Key Concepts
+
+- **Commands**: Individual actions users can trigger
+- **Views**: UI components (List, Grid, Detail, Form)
+- **Actions**: User interactions (copy, open, etc.)
+- **Preferences**: User-configurable settings
+- **Cache**: Temporary data storage
+- **Storage**: Persistent data storage
+- **OAuth**: Authentication flows
+
+## TypeScript Configuration
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "commonjs",
+    "lib": ["ES2021"],
+    "jsx": "react",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src/**/*"]
+}
+```
+
+## Best Practices
+
+- Use TypeScript for type safety
+- Follow React best practices
+- Keep commands focused and single-purpose
+- Use preferences for configuration
+- Handle errors gracefully
+- Provide loading states
+- Use appropriate icons
+- Write descriptive titles and subtitles

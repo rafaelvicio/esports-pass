@@ -1,0 +1,372 @@
+---
+description: Raycast UI components and patterns
+globs: **/src/**/*.tsx
+alwaysApply: false
+---
+# Raycast UI Components
+
+**Complete guide to Raycast UI components and patterns**
+
+## List Component
+
+### Basic List
+
+```tsx
+import { List } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <List>
+      <List.Item title="Item 1" />
+      <List.Item title="Item 2" />
+    </List>
+  );
+}
+```
+
+### List with Sections
+
+```tsx
+import { List } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <List>
+      <List.Section title="Section 1">
+        <List.Item title="Item 1" />
+        <List.Item title="Item 2" />
+      </List.Section>
+      <List.Section title="Section 2">
+        <List.Item title="Item 3" />
+      </List.Section>
+    </List>
+  );
+}
+```
+
+### List Item with Accessories
+
+```tsx
+import { List, Icon, Color } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <List>
+      <List.Item
+        title="Item"
+        subtitle="Subtitle"
+        icon={Icon.Star}
+        accessories={[
+          { text: "Accessory 1" },
+          { icon: Icon.Checkmark, tintColor: Color.Green },
+          { date: new Date() },
+        ]}
+      />
+    </List>
+  );
+}
+```
+
+### List with Dropdown
+
+```tsx
+import { List } from "@raycast/api";
+import { useState } from "react";
+
+export default function Command() {
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
+  return (
+    <List
+      searchBarAccessory={
+        <List.Dropdown
+          tooltip="Filter by category"
+          value={selectedCategory}
+          onChange={setSelectedCategory}
+        >
+          <List.Dropdown.Item title="All" value="all" />
+          <List.Dropdown.Item title="Category 1" value="cat1" />
+          <List.Dropdown.Item title="Category 2" value="cat2" />
+        </List.Dropdown>
+      }
+    >
+      {/* List items */}
+    </List>
+  );
+}
+```
+
+## Grid Component
+
+### Basic Grid
+
+```tsx
+import { Grid } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <Grid columns={4}>
+      <Grid.Item content="icon.png" title="Item 1" />
+      <Grid.Item content="icon.png" title="Item 2" />
+    </Grid>
+  );
+}
+```
+
+### Grid with Sections
+
+```tsx
+import { Grid } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <Grid columns={4}>
+      <Grid.Section title="Section 1">
+        <Grid.Item content="icon.png" title="Item 1" />
+        <Grid.Item content="icon.png" title="Item 2" />
+      </Grid.Section>
+    </Grid>
+  );
+}
+```
+
+## Detail Component
+
+### Basic Detail
+
+```tsx
+import { Detail } from "@raycast/api";
+
+export default function Command() {
+  const markdown = `
+# Title
+
+Description here.
+
+## Section
+
+- Item 1
+- Item 2
+  `;
+
+  return <Detail markdown={markdown} />;
+}
+```
+
+### Detail with Metadata
+
+```tsx
+import { Detail } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <Detail
+      markdown="# Item Details"
+      metadata={
+        <Detail.Metadata>
+          <Detail.Metadata.Label title="Title" text="Value" />
+          <Detail.Metadata.Separator />
+          <Detail.Metadata.TagList title="Tags">
+            <Detail.Metadata.TagList.Item text="Tag 1" color="red" />
+            <Detail.Metadata.TagList.Item text="Tag 2" color="blue" />
+          </Detail.Metadata.TagList>
+          <Detail.Metadata.Link
+            title="Link"
+            target="https://raycast.com"
+            text="Raycast"
+          />
+        </Detail.Metadata>
+      }
+    />
+  );
+}
+```
+
+## Form Component
+
+### Text Fields
+
+```tsx
+import { Form } from "@raycast/api";
+import { useState } from "react";
+
+export default function Command() {
+  const [text, setText] = useState("");
+  const [password, setPassword] = useState("");
+
+  return (
+    <Form>
+      <Form.TextField
+        id="text"
+        title="Text Field"
+        value={text}
+        onChange={setText}
+        placeholder="Enter text"
+      />
+      <Form.PasswordField
+        id="password"
+        title="Password"
+        value={password}
+        onChange={setPassword}
+      />
+    </Form>
+  );
+}
+```
+
+### Dropdown and Tags
+
+```tsx
+import { Form } from "@raycast/api";
+import { useState } from "react";
+
+export default function Command() {
+  const [dropdown, setDropdown] = useState("option1");
+  const [tags, setTags] = useState<string[]>([]);
+
+  return (
+    <Form>
+      <Form.Dropdown id="dropdown" title="Dropdown" value={dropdown} onChange={setDropdown}>
+        <Form.Dropdown.Item value="option1" title="Option 1" />
+        <Form.Dropdown.Item value="option2" title="Option 2" />
+      </Form.Dropdown>
+
+      <Form.TagPicker
+        id="tags"
+        title="Tags"
+        value={tags}
+        onChange={setTags}
+      >
+        <Form.TagPicker.Item value="tag1" title="Tag 1" />
+        <Form.TagPicker.Item value="tag2" title="Tag 2" />
+      </Form.TagPicker>
+    </Form>
+  );
+}
+```
+
+### Checkboxes and Date Picker
+
+```tsx
+import { Form } from "@raycast/api";
+import { useState } from "react";
+
+export default function Command() {
+  const [checked, setChecked] = useState(false);
+  const [date, setDate] = useState<Date | null>(null);
+
+  return (
+    <Form>
+      <Form.Checkbox
+        id="checkbox"
+        title="Checkbox"
+        label="Enable feature"
+        value={checked}
+        onChange={setChecked}
+      />
+
+      <Form.DatePicker
+        id="date"
+        title="Date"
+        value={date}
+        onChange={setDate}
+      />
+    </Form>
+  );
+}
+```
+
+## Toast Notifications
+
+```tsx
+import { showToast, Toast, updateCommandMetadata } from "@raycast/api";
+
+// Simple toast
+await showToast({
+  style: Toast.Style.Success,
+  title: "Success",
+  message: "Operation completed",
+});
+
+// Animated toast
+const toast = await showToast({
+  style: Toast.Style.Animated,
+  title: "Processing...",
+});
+
+// Update toast
+await showToast({
+  style: Toast.Style.Success,
+  title: "Completed",
+  primaryAction: {
+    title: "View",
+    onAction: () => console.log("View clicked"),
+  },
+});
+```
+
+## Icons
+
+```tsx
+import { Icon, Color } from "@raycast/api";
+
+// Built-in icons
+<Icon.Globe />
+<Icon.Star />
+<Icon.Checkmark />
+
+// Custom icon with tint
+<Icon source="custom-icon.png" tintColor={Color.Blue} />
+
+// Icon from URL
+<Icon source={{ light: "icon-light.png", dark: "icon-dark.png" }} />
+```
+
+## Colors
+
+```tsx
+import { Color } from "@raycast/api";
+
+// Predefined colors
+Color.Red
+Color.Orange
+Color.Yellow
+Color.Green
+Color.Blue
+Color.Purple
+Color.Magenta
+
+// Custom color
+Color.Blue.alpha(0.5)
+```
+
+## Keyboard Shortcuts
+
+```tsx
+import { Action, Keyboard } from "@raycast/api";
+
+<Action
+  title="Action"
+  shortcut={Keyboard.Shortcut.Common.Copy}
+  onAction={() => console.log("Copy")}
+/>
+
+<Action
+  title="Custom Shortcut"
+  shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
+  onAction={() => console.log("Custom")}
+/>
+```
+
+## Best Practices
+
+- Use appropriate component for the use case
+- Provide loading states
+- Handle empty states gracefully
+- Use consistent icons and colors
+- Add keyboard shortcuts for common actions
+- Use metadata in Detail views for structured data
+- Validate form inputs
+- Show toast notifications for user feedback
+- Use sections to organize content
+- Keep UI simple and focused

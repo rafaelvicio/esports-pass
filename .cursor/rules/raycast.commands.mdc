@@ -1,0 +1,374 @@
+---
+description: How to create and structure Raycast commands
+globs: **/src/commands/**/*.tsx
+alwaysApply: false
+---
+# Raycast Commands
+
+**Complete guide to creating and structuring Raycast commands**
+
+## Command Types
+
+### List Command
+
+```tsx
+import { List, ActionPanel, Action, Icon } from "@raycast/api";
+import { useState, useEffect } from "react";
+
+interface Item {
+  id: string;
+  title: string;
+  subtitle: string;
+}
+
+export default function Command() {
+  const [items, setItems] = useState<Item[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchItems() {
+      const data = await fetchData();
+      setItems(data);
+      setIsLoading(false);
+    }
+    fetchItems();
+  }, []);
+
+  return (
+    <List isLoading={isLoading}>
+      {items.map((item) => (
+        <List.Item
+          key={item.id}
+          title={item.title}
+          subtitle={item.subtitle}
+          actions={
+            <ActionPanel>
+              <Action
+                title="Open"
+                icon={Icon.Globe}
+                onAction={() => openItem(item)}
+              />
+              <Action.CopyToClipboard
+                content={item.title}
+                title="Copy Title"
+              />
+            </ActionPanel>
+          }
+        />
+      ))}
+    </List>
+  );
+}
+```
+
+### Grid Command
+
+```tsx
+import { Grid, ActionPanel, Action } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <Grid columns={4}>
+      <Grid.Item
+        content="icon.png"
+        title="Item 1"
+        actions={
+          <ActionPanel>
+            <Action title="Select" onAction={() => console.log("Selected")} />
+          </ActionPanel>
+        }
+      />
+    </Grid>
+  );
+}
+```
+
+### Detail Command
+
+```tsx
+import { Detail, ActionPanel, Action } from "@raycast/api";
+
+export default function Command() {
+  const markdown = `
+# Title
+
+Description here.
+
+## Section
+
+Content here.
+  `;
+
+  return (
+    <Detail
+      markdown={markdown}
+      actions={
+        <ActionPanel>
+          <Action title="Action" onAction={() => console.log("Action")} />
+        </ActionPanel>
+      }
+    />
+  );
+}
+```
+
+### Form Command
+
+```tsx
+import { Form, ActionPanel, Action, showToast, Toast } from "@raycast/api";
+import { useState } from "react";
+
+export default function Command() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  async function handleSubmit() {
+    if (!name || !email) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Please fill all fields",
+      });
+      return;
+    }
+
+    await showToast({
+      style: Toast.Style.Success,
+      title: "Form submitted",
+    });
+  }
+
+  return (
+    <Form
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm title="Submit" onSubmit={handleSubmit} />
+        </ActionPanel>
+      }
+    >
+      <Form.TextField
+        id="name"
+        title="Name"
+        value={name}
+        onChange={setName}
+      />
+      <Form.TextField
+        id="email"
+        title="Email"
+        value={email}
+        onChange={setEmail}
+      />
+    </Form>
+  );
+}
+```
+
+### No-View Command
+
+```tsx
+import { showToast, Toast, Clipboard } from "@raycast/api";
+
+export default async function Command() {
+  const text = await generateText();
+
+  await Clipboard.copy(text);
+
+  await showToast({
+    style: Toast.Style.Success,
+    title: "Copied to clipboard",
+  });
+}
+```
+
+## Search Functionality
+
+```tsx
+import { List, useNavigation } from "@raycast/api";
+import { useState } from "react";
+
+export default function Command() {
+  const [searchText, setSearchText] = useState("");
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    const filtered = items.filter((item) =>
+      item.title.toLowerCase().includes(searchText.toLowerCase())
+    );
+    setFilteredItems(filtered);
+  }, [searchText, items]);
+
+  return (
+    <List
+      searchBarPlaceholder="Search items..."
+      onSearchTextChange={setSearchText}
+    >
+      {filteredItems.map((item) => (
+        <List.Item key={item.id} title={item.title} />
+      ))}
+    </List>
+  );
+}
+```
+
+## Actions and ActionPanel
+
+```tsx
+import {
+  ActionPanel,
+  Action,
+  Icon,
+  Color,
+  showToast,
+  Toast,
+  Clipboard,
+  open,
+} from "@raycast/api";
+
+export function ItemActions({ item }: { item: Item }) {
+  return (
+    <ActionPanel>
+      {/* Primary Action */}
+      <Action
+        title="Open"
+        icon={Icon.Globe}
+        onAction={() => open(item.url)}
+      />
+
+      {/* Secondary Actions */}
+      <Action.CopyToClipboard
+        content={item.url}
+        title="Copy URL"
+        shortcut={{ modifiers: ["cmd"], key: "c" }}
+      />
+
+      <Action.CopyToClipboard
+        content={item.title}
+        title="Copy Title"
+        shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
+      />
+
+      {/* Custom Action */}
+      <Action
+        title="Custom Action"
+        icon={{ source: Icon.Star, tintColor: Color.Yellow }}
+        onAction={async () => {
+          await showToast({
+            style: Toast.Style.Success,
+            title: "Action completed",
+          });
+        }}
+      />
+
+      {/* Submenu */}
+      <ActionPanel.Submenu title="More Actions" icon={Icon.Ellipsis}>
+        <Action title="Action 1" onAction={() => console.log("1")} />
+        <Action title="Action 2" onAction={() => console.log("2")} />
+      </ActionPanel.Submenu>
+    </ActionPanel>
+  );
+}
+```
+
+## Navigation
+
+```tsx
+import { List, Detail, useNavigation } from "@raycast/api";
+
+export default function Command() {
+  const { push } = useNavigation();
+
+  return (
+    <List>
+      <List.Item
+        title="View Details"
+        actions={
+          <ActionPanel>
+            <Action
+              title="Open Detail"
+              onAction={() => push(<DetailView item={item} />)}
+            />
+          </ActionPanel>
+        }
+      />
+    </List>
+  );
+}
+
+function DetailView({ item }: { item: Item }) {
+  return <Detail markdown={`# ${item.title}\n\n${item.description}`} />;
+}
+```
+
+## Loading States
+
+```tsx
+import { List, showToast, Toast } from "@raycast/api";
+import { useState, useEffect } from "react";
+
+export default function Command() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<Item[]>([]);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setIsLoading(true);
+        const data = await fetchData();
+        setItems(data);
+      } catch (err) {
+        setError(err as Error);
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Failed to load data",
+          message: err.message,
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  if (error) {
+    return <List.EmptyView title="Error" description={error.message} />;
+  }
+
+  return (
+    <List isLoading={isLoading}>
+      {items.map((item) => (
+        <List.Item key={item.id} title={item.title} />
+      ))}
+    </List>
+  );
+}
+```
+
+## Empty States
+
+```tsx
+import { List } from "@raycast/api";
+
+export default function Command() {
+  return (
+    <List>
+      <List.EmptyView
+        icon="empty-state.png"
+        title="No items found"
+        description="Try adjusting your search"
+      />
+    </List>
+  );
+}
+```
+
+## Best Practices
+
+- Use appropriate command mode (view vs no-view)
+- Provide loading states for async operations
+- Handle errors gracefully
+- Use keyboard shortcuts for common actions
+- Group related actions in submenus
+- Provide empty states for better UX
+- Use icons consistently
+- Keep commands focused and single-purpose

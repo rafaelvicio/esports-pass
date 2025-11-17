@@ -1,0 +1,341 @@
+---
+description: Publishing and best practices for Raycast extensions
+globs: **/package.json
+alwaysApply: false
+---
+# Raycast Publishing & Best Practices
+
+**Guide to publishing extensions and following best practices**
+
+## Preparing for Store
+
+### Package.json Requirements
+
+```json
+{
+  "name": "my-extension",
+  "title": "My Extension",
+  "description": "Clear description of what the extension does",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "license": "MIT",
+  "raycast": {
+    "schemaVersion": 1,
+    "title": "My Extension",
+    "description": "Extension description",
+    "icon": "icon.png",
+    "access": "public",
+    "commands": [
+      {
+        "name": "index",
+        "title": "My Command",
+        "description": "Command description",
+        "mode": "view"
+      }
+    ]
+  }
+}
+```
+
+### Icon Requirements
+
+- **Size**: 512x512 pixels
+- **Format**: PNG
+- **Location**: `assets/icon.png`
+- **Style**: Should be recognizable at small sizes
+- **Background**: Transparent or solid color
+
+### Required Fields
+
+- `title`: Clear, descriptive title
+- `description`: What the extension does
+- `author`: Your name or organization
+- `license`: MIT, Apache-2.0, etc.
+- `version`: Semantic versioning (1.0.0)
+
+## Building for Production
+
+### Build Command
+
+```bash
+npx ray build -e dist
+```
+
+This creates a production-ready bundle in the `dist` folder.
+
+### Lint Before Publishing
+
+```bash
+npx ray lint
+```
+
+Fixes common issues and ensures code quality.
+
+## Publishing
+
+### Publish to Store
+
+```bash
+npx ray publish
+```
+
+This will:
+1. Build your extension
+2. Validate the manifest
+3. Upload to Raycast Store
+4. Submit for review
+
+### Private Extensions
+
+Set `access: "private"` in package.json for team-only extensions.
+
+## Best Practices
+
+### Code Quality
+
+```tsx
+// ✅ Good: Type-safe, clear naming
+interface User {
+  id: string;
+  name: string;
+}
+
+function fetchUser(id: string): Promise<User> {
+  // Implementation
+}
+
+// ❌ Bad: Any types, unclear naming
+function getData(id: any): any {
+  // Implementation
+}
+```
+
+### Error Handling
+
+```tsx
+import { showToast, Toast } from "@raycast/api";
+
+export default async function Command() {
+  try {
+    const data = await fetchData();
+    return data;
+  } catch (error) {
+    await showToast({
+      style: Toast.Style.Failure,
+      title: "Error",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+    throw error;
+  }
+}
+```
+
+### Loading States
+
+```tsx
+import { List } from "@raycast/api";
+import { useState, useEffect } from "react";
+
+export default function Command() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<Item[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      setIsLoading(true);
+      const data = await fetchItems();
+      setItems(data);
+      setIsLoading(false);
+    }
+    load();
+  }, []);
+
+  return <List isLoading={isLoading}>{/* items */}</List>;
+}
+```
+
+### Performance
+
+```tsx
+// ✅ Good: Debounced search
+import { useDebounce } from "@raycast/utils";
+
+export default function Command() {
+  const [searchText, setSearchText] = useState("");
+  const debouncedSearch = useDebounce(searchText, 300);
+  
+  // Use debouncedSearch for API calls
+}
+
+// ✅ Good: Cache expensive operations
+import { Cache } from "@raycast/api";
+
+async function getCachedData(key: string) {
+  const cached = await Cache.get(key);
+  if (cached) return JSON.parse(cached);
+  
+  const data = await fetchData();
+  await Cache.set(key, JSON.stringify(data), { ttl: 3600 });
+  return data;
+}
+```
+
+### Accessibility
+
+```tsx
+// ✅ Good: Descriptive titles and subtitles
+<List.Item
+  title="Clear Title"
+  subtitle="Helpful description"
+  accessories={[{ text: "Additional info" }]}
+/>
+
+// ✅ Good: Keyboard shortcuts
+<Action
+  title="Copy"
+  shortcut={Keyboard.Shortcut.Common.Copy}
+  onAction={handleCopy}
+/>
+```
+
+### User Experience
+
+```tsx
+// ✅ Good: Empty states
+<List.EmptyView
+  icon="empty-state.png"
+  title="No results"
+  description="Try adjusting your search"
+/>
+
+// ✅ Good: Feedback
+await showToast({
+  style: Toast.Style.Success,
+  title: "Completed",
+  message: "Operation successful",
+});
+```
+
+## Security
+
+### API Keys
+
+```tsx
+// ✅ Good: Use preferences for sensitive data
+// In package.json
+{
+  "preferences": [
+    {
+      "name": "apiKey",
+      "type": "password",
+      "required": true,
+      "title": "API Key"
+    }
+  ]
+}
+
+// In code
+import { getPreferenceValues } from "@raycast/api";
+
+const { apiKey } = getPreferenceValues<{ apiKey: string }>();
+```
+
+### OAuth
+
+```tsx
+// ✅ Good: Use OAuth for authentication
+import { OAuthService } from "@raycast/utils";
+
+const oauthService = OAuthService.google({
+  clientId: "your-client-id",
+  scope: "email profile",
+});
+
+const tokenSet = await oauthService.authorize();
+```
+
+## Testing
+
+### Manual Testing
+
+1. Test all commands
+2. Verify error handling
+3. Check loading states
+4. Test with different preferences
+5. Verify keyboard shortcuts
+6. Test empty states
+7. Check accessibility
+
+### Common Issues
+
+- Missing error handling
+- No loading states
+- Poor empty states
+- Missing type safety
+- No input validation
+- Missing preferences
+- Poor performance
+- Accessibility issues
+
+## Versioning
+
+### Semantic Versioning
+
+- **Major** (1.0.0): Breaking changes
+- **Minor** (0.1.0): New features, backward compatible
+- **Patch** (0.0.1): Bug fixes
+
+### Changelog
+
+Keep a CHANGELOG.md with version history:
+
+```markdown
+# Changelog
+
+## [1.0.0] - 2024-01-01
+### Added
+- Initial release
+- Feature X
+- Feature Y
+
+### Fixed
+- Bug fix A
+- Bug fix B
+```
+
+## Store Guidelines
+
+### Title and Description
+
+- Clear, descriptive titles
+- Explain what the extension does
+- Mention key features
+- Use proper grammar and spelling
+
+### Icons
+
+- High quality, recognizable
+- Consistent with Raycast design
+- Appropriate for the extension's purpose
+
+### Commands
+
+- Clear command names
+- Descriptive titles
+- Helpful descriptions
+- Appropriate icons
+
+## Checklist Before Publishing
+
+- [ ] All commands work correctly
+- [ ] Error handling implemented
+- [ ] Loading states provided
+- [ ] Empty states handled
+- [ ] Preferences configured
+- [ ] Icons added
+- [ ] TypeScript types defined
+- [ ] Code linted
+- [ ] Documentation complete
+- [ ] Version updated
+- [ ] Changelog updated
+- [ ] Tested thoroughly

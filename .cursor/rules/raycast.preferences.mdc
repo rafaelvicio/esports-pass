@@ -1,0 +1,348 @@
+---
+description: Preferences and configuration for Raycast extensions
+globs: **/package.json
+alwaysApply: false
+---
+# Raycast Preferences
+
+**Guide to configuring preferences and settings in Raycast extensions**
+
+## Defining Preferences
+
+### In package.json
+
+```json
+{
+  "raycast": {
+    "preferences": [
+      {
+        "name": "apiKey",
+        "type": "textfield",
+        "required": true,
+        "title": "API Key",
+        "description": "Your API key for the service",
+        "placeholder": "Enter your API key"
+      },
+      {
+        "name": "theme",
+        "type": "dropdown",
+        "required": false,
+        "title": "Theme",
+        "description": "Choose your preferred theme",
+        "default": "light",
+        "data": [
+          { "title": "Light", "value": "light" },
+          { "title": "Dark", "value": "dark" },
+          { "title": "Auto", "value": "auto" }
+        ]
+      },
+      {
+        "name": "enableNotifications",
+        "type": "checkbox",
+        "required": false,
+        "title": "Enable Notifications",
+        "description": "Receive notifications for updates",
+        "default": true,
+        "label": "Enable"
+      }
+    ]
+  }
+}
+```
+
+## Preference Types
+
+### Textfield
+
+```json
+{
+  "name": "apiKey",
+  "type": "textfield",
+  "required": true,
+  "title": "API Key",
+  "description": "Your API key",
+  "placeholder": "Enter API key"
+}
+```
+
+```tsx
+import { getPreferenceValues } from "@raycast/api";
+
+interface Preferences {
+  apiKey: string;
+}
+
+export default function Command() {
+  const preferences = getPreferenceValues<Preferences>();
+  const apiKey = preferences.apiKey;
+}
+```
+
+### Password
+
+```json
+{
+  "name": "password",
+  "type": "password",
+  "required": true,
+  "title": "Password",
+  "description": "Your password"
+}
+```
+
+### Checkbox
+
+```json
+{
+  "name": "enableFeature",
+  "type": "checkbox",
+  "required": false,
+  "title": "Enable Feature",
+  "description": "Enable this feature",
+  "default": true,
+  "label": "Enable"
+}
+```
+
+```tsx
+import { getPreferenceValues } from "@raycast/api";
+
+interface Preferences {
+  enableFeature: boolean;
+}
+
+export default function Command() {
+  const { enableFeature } = getPreferenceValues<Preferences>();
+  
+  if (enableFeature) {
+    // Feature enabled
+  }
+}
+```
+
+### Dropdown
+
+```json
+{
+  "name": "language",
+  "type": "dropdown",
+  "required": false,
+  "title": "Language",
+  "description": "Select your language",
+  "default": "en",
+  "data": [
+    { "title": "English", "value": "en" },
+    { "title": "Spanish", "value": "es" },
+    { "title": "French", "value": "fr" }
+  ]
+}
+```
+
+```tsx
+import { getPreferenceValues } from "@raycast/api";
+
+interface Preferences {
+  language: "en" | "es" | "fr";
+}
+
+export default function Command() {
+  const { language } = getPreferenceValues<Preferences>();
+}
+```
+
+### Textarea
+
+```json
+{
+  "name": "notes",
+  "type": "textarea",
+  "required": false,
+  "title": "Notes",
+  "description": "Additional notes",
+  "placeholder": "Enter notes here"
+}
+```
+
+## Using Preferences
+
+### Get All Preferences
+
+```tsx
+import { getPreferenceValues } from "@raycast/api";
+
+interface Preferences {
+  apiKey: string;
+  theme: string;
+  enableNotifications: boolean;
+}
+
+export default function Command() {
+  const preferences = getPreferenceValues<Preferences>();
+  
+  console.log(preferences.apiKey);
+  console.log(preferences.theme);
+  console.log(preferences.enableNotifications);
+}
+```
+
+### Type-Safe Preferences
+
+```tsx
+import { getPreferenceValues } from "@raycast/api";
+
+interface Preferences {
+  apiKey: string;
+  timeout: number;
+  retries: number;
+  enableCache: boolean;
+  theme: "light" | "dark" | "auto";
+}
+
+export default function Command() {
+  const prefs = getPreferenceValues<Preferences>();
+  
+  // TypeScript will enforce types
+  const apiKey: string = prefs.apiKey;
+  const timeout: number = prefs.timeout;
+}
+```
+
+### Conditional Logic Based on Preferences
+
+```tsx
+import { getPreferenceValues, List } from "@raycast/api";
+
+interface Preferences {
+  showDetails: boolean;
+  maxResults: number;
+}
+
+export default function Command() {
+  const { showDetails, maxResults } = getPreferenceValues<Preferences>();
+  
+  return (
+    <List>
+      {items.slice(0, maxResults).map((item) => (
+        <List.Item
+          key={item.id}
+          title={item.title}
+          subtitle={showDetails ? item.description : undefined}
+        />
+      ))}
+    </List>
+  );
+}
+```
+
+## Environment Variables
+
+### Accessing Environment Variables
+
+```tsx
+import { environment } from "@raycast/api";
+
+export default function Command() {
+  const isDevelopment = environment.isDevelopment;
+  const extensionName = environment.extensionName;
+  const commandName = environment.commandName;
+  const commandMode = environment.commandMode;
+  const raycastVersion = environment.raycastVersion;
+  const theme = environment.theme; // "light" | "dark"
+}
+```
+
+## Best Practices
+
+- Use descriptive titles and descriptions
+- Mark required preferences as `required: true`
+- Provide default values when appropriate
+- Use TypeScript interfaces for type safety
+- Validate preference values in code
+- Use dropdowns for limited options
+- Use checkboxes for boolean flags
+- Use textfields for free-form text
+- Use passwords for sensitive data
+- Group related preferences logically
+- Provide helpful placeholders and descriptions
+
+## Example: Complete Preference Setup
+
+```json
+{
+  "raycast": {
+    "preferences": [
+      {
+        "name": "apiKey",
+        "type": "textfield",
+        "required": true,
+        "title": "API Key",
+        "description": "Your API key for authentication"
+      },
+      {
+        "name": "baseUrl",
+        "type": "textfield",
+        "required": false,
+        "title": "Base URL",
+        "description": "API base URL",
+        "default": "https://api.example.com"
+      },
+      {
+        "name": "timeout",
+        "type": "textfield",
+        "required": false,
+        "title": "Timeout (seconds)",
+        "description": "Request timeout in seconds",
+        "default": "30"
+      },
+      {
+        "name": "enableCache",
+        "type": "checkbox",
+        "required": false,
+        "title": "Enable Cache",
+        "description": "Cache API responses",
+        "default": true,
+        "label": "Enable"
+      },
+      {
+        "name": "theme",
+        "type": "dropdown",
+        "required": false,
+        "title": "Theme",
+        "description": "UI theme preference",
+        "default": "auto",
+        "data": [
+          { "title": "Auto", "value": "auto" },
+          { "title": "Light", "value": "light" },
+          { "title": "Dark", "value": "dark" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+```tsx
+import { getPreferenceValues } from "@raycast/api";
+
+interface Preferences {
+  apiKey: string;
+  baseUrl: string;
+  timeout: string;
+  enableCache: boolean;
+  theme: "auto" | "light" | "dark";
+}
+
+export default function Command() {
+  const prefs = getPreferenceValues<Preferences>();
+  
+  const config = {
+    apiKey: prefs.apiKey,
+    baseUrl: prefs.baseUrl || "https://api.example.com",
+    timeout: parseInt(prefs.timeout) || 30,
+    enableCache: prefs.enableCache,
+    theme: prefs.theme,
+  };
+  
+  // Use config...
+}
+```
