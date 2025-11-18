@@ -1,11 +1,12 @@
 import { ActionPanel, Action, List } from "@raycast/api";
-import { useFetch } from "@raycast/utils";
-import { useState } from "react";
+import { useFetch, useCachedState } from "@raycast/utils";
 
 import { videogames } from "./constants/videogames";
 
+const STORAGE_KEY = "selected-videogame";
+
 export default function Command() {
-  const [videogame, setVideoGame] = useState("");
+  const [videogame, setVideoGame] = useCachedState<string>(STORAGE_KEY, "");
 
   const { data, isLoading } = useFetch(
     "https://lobby.maisesports.com.br/featured/matches?" +
@@ -19,7 +20,7 @@ export default function Command() {
     <List
       isLoading={isLoading}
       searchBarAccessory={
-        <List.Dropdown tooltip="Filter by game" storeValue onChange={(newValue) => setVideoGame(newValue)}>
+        <List.Dropdown tooltip="Filter by game" value={videogame} onChange={setVideoGame}>
           <List.Dropdown.Item title="All games" value="" />
           <List.Dropdown.Item icon="./lol.png" title="League of legends" value="league-of-legends" />
           <List.Dropdown.Item icon="./valorant.png" title="VALORANT" value="valorant" />

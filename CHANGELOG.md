@@ -1,5 +1,9 @@
 # Esports Pass Changelog
 
+## [Improves] - {PR_MERGE_DATE}
+
+- Store filter values
+
 ## [Fix Incorrect Date] - 2025-08-08
 
 - Fix timezone issue in Matches/Results command
